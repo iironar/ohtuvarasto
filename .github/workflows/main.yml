@@ -1,4 +1,4 @@
-name: CI
+name: CL
 
 on:
   push:
