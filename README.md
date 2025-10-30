@@ -1,4 +1,4 @@
 # ohtuvarasto
 
-![CL BADGE](https://github.com/iironar/ohtuvarasto/workflows/CL/badge.svg)
+[![CL](https://github.com/iironar/ohtuvarasto/workflows/CL/badge.svg)](https://github.com/iironar/ohtuvarasto/actions)
 
