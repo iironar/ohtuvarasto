@@ -79,7 +79,7 @@ class TestVarasto(unittest.TestCase):
         self.assertEqual(palautettava_string, str(self.varasto))
         
         self.varasto.lisaa_varastoon(6)
-        palautettava_string = "saldo = 9, vielä tilaa 4"
+        palautettava_string = "saldo = 6, vielä tilaa 4"
         self.assertEqual(palautettava_string, str(self.varasto))             
         
             
