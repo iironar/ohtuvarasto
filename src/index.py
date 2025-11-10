@@ -17,7 +17,7 @@ def main():
     print("xd")
     print("xd")
     print("xd")
-    print("xd")
+
 
 def tulosta_luonnin_jalkeen(mehua, olutta):
     print("Luonnin jälkeen:")
