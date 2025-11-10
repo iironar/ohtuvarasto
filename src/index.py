@@ -11,25 +11,18 @@ def main():
     virheellinen_lisays(olutta,mehua)
     oluen_otto_testaus(olutta)
     mehun_otto_testaus(mehua)
-    print("xd")
-    print("xd")
-    print("xd")
-    print("xd")
-    print("xd")
-    print("xd")
-
 
 def tulosta_luonnin_jalkeen(mehua, olutta):
     print("Luonnin jälkeen:")
     print(f"Mehuvarasto: {mehua}")
     print(f"Olutvarasto: {olutta}")
-    
+
 def tulosta_olut_getterit(olutta):
     print("Olut getterit:")
     print(f"saldo = {olutta.saldo}")
     print(f"tilavuus = {olutta.tilavuus}")
     print(f"paljonko_mahtuu = {olutta.paljonko_mahtuu()}")
-    
+
 def tulosta_mehu_setterit(mehua):
     print("Mehu setterit:")
     print("Lisätään 50.7")
