@@ -23,7 +23,8 @@ class WarehouseStore:
     def add(self, name, varasto):
         warehouse_id = self.get_next_id()
         self.warehouses[warehouse_id] = {
-            'id': warehouse_id, 'name': name, 'varasto': varasto
+            'id': warehouse_id, 'name': name, 'varasto': varasto,
+            'products': {}
         }
         return warehouse_id
 
@@ -140,6 +141,16 @@ def delete_warehouse(warehouse_id):
     return redirect(url_for('index'))
 
 
+def validate_product_input(product_name, amount, warehouse_id):
+    if not product_name:
+        flash('Product name is required', 'error')
+        return redirect(url_for('view_warehouse', warehouse_id=warehouse_id))
+    if amount is None or amount <= 0:
+        flash('Amount must be a positive number', 'error')
+        return redirect(url_for('view_warehouse', warehouse_id=warehouse_id))
+    return None
+
+
 @app.route('/warehouse/<int:warehouse_id>/add', methods=['POST'])
 def add_to_warehouse(warehouse_id):
     warehouse = store.get(warehouse_id)
@@ -147,13 +158,28 @@ def add_to_warehouse(warehouse_id):
         flash('Warehouse not found', 'error')
         return redirect(url_for('index'))
 
+    product_name = request.form.get('product_name', '').strip()
     amount = parse_float(request.form.get('amount'))
-    if amount is None or amount <= 0:
-        flash('Amount must be a positive number', 'error')
-        return redirect(url_for('view_warehouse', warehouse_id=warehouse_id))
 
-    warehouse['varasto'].lisaa_varastoon(amount)
-    flash(f'Added {amount} to warehouse', 'success')
+    error = validate_product_input(product_name, amount, warehouse_id)
+    if error:
+        return error
+
+    return handle_add_product(warehouse, product_name, amount, warehouse_id)
+
+
+def handle_add_product(warehouse, product_name, amount, warehouse_id):
+    products = warehouse['products']
+    current_total = sum(products.values())
+    space = warehouse['varasto'].tilavuus - current_total
+    amount = min(amount, space)
+
+    if amount > 0:
+        products[product_name] = products.get(product_name, 0) + amount
+        flash(f'Added {amount} of "{product_name}" to warehouse', 'success')
+    else:
+        flash('No space available in warehouse', 'error')
+
     return redirect(url_for('view_warehouse', warehouse_id=warehouse_id))
 
 
@@ -164,13 +190,29 @@ def remove_from_warehouse(warehouse_id):
         flash('Warehouse not found', 'error')
         return redirect(url_for('index'))
 
+    product_name = request.form.get('product_name', '').strip()
     amount = parse_float(request.form.get('amount'))
-    if amount is None or amount <= 0:
-        flash('Amount must be a positive number', 'error')
+
+    error = validate_product_input(product_name, amount, warehouse_id)
+    if error:
+        return error
+
+    return handle_remove_product(warehouse, product_name, amount, warehouse_id)
+
+
+def handle_remove_product(warehouse, product_name, amount, warehouse_id):
+    products = warehouse['products']
+    if product_name not in products:
+        flash(f'Product "{product_name}" not found in warehouse', 'error')
         return redirect(url_for('view_warehouse', warehouse_id=warehouse_id))
 
-    removed = warehouse['varasto'].ota_varastosta(amount)
-    flash(f'Removed {removed} from warehouse', 'success')
+    removed = min(amount, products[product_name])
+    products[product_name] -= removed
+
+    if products[product_name] <= 0:
+        del products[product_name]
+
+    flash(f'Removed {removed} of "{product_name}" from warehouse', 'success')
     return redirect(url_for('view_warehouse', warehouse_id=warehouse_id))
 
 

@@ -52,12 +52,12 @@ class TestApp(unittest.TestCase):
         self.client.post('/warehouse/create', data={
             'name': 'Test Warehouse',
             'tilavuus': '100',
-            'alku_saldo': '50'
+            'alku_saldo': '0'
         })
         response = self.client.get('/warehouse/1')
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'Test Warehouse', response.data)
-        self.assertIn(b'50', response.data)
+        self.assertIn(b'Total Capacity', response.data)
 
     def test_view_warehouse_not_found(self):
         response = self.client.get('/warehouse/999', follow_redirects=True)
@@ -106,24 +106,30 @@ class TestApp(unittest.TestCase):
             'alku_saldo': '0'
         })
         response = self.client.post('/warehouse/1/add', data={
+            'product_name': 'Apples',
             'amount': '30'
         }, follow_redirects=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'Added 30', response.data)
-        self.assertAlmostEqual(store.get(1)['varasto'].saldo, 30)
+        self.assertEqual(store.get(1)['products']['Apples'], 30)
 
     def test_remove_from_warehouse(self):
         self.client.post('/warehouse/create', data={
             'name': 'Test Warehouse',
             'tilavuus': '100',
-            'alku_saldo': '50'
+            'alku_saldo': '0'
+        })
+        self.client.post('/warehouse/1/add', data={
+            'product_name': 'Oranges',
+            'amount': '50'
         })
         response = self.client.post('/warehouse/1/remove', data={
+            'product_name': 'Oranges',
             'amount': '20'
         }, follow_redirects=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'Removed 20', response.data)
-        self.assertAlmostEqual(store.get(1)['varasto'].saldo, 30)
+        self.assertEqual(store.get(1)['products']['Oranges'], 30)
 
     def test_add_invalid_amount(self):
         self.client.post('/warehouse/create', data={
@@ -132,6 +138,7 @@ class TestApp(unittest.TestCase):
             'alku_saldo': '50'
         })
         response = self.client.post('/warehouse/1/add', data={
+            'product_name': 'Bananas',
             'amount': '-10'
         }, follow_redirects=True)
         self.assertIn(b'Amount must be a positive number', response.data)
@@ -143,6 +150,7 @@ class TestApp(unittest.TestCase):
             'alku_saldo': '50'
         })
         response = self.client.post('/warehouse/1/remove', data={
+            'product_name': 'Grapes',
             'amount': '0'
         }, follow_redirects=True)
         self.assertIn(b'Amount must be a positive number', response.data)
@@ -175,12 +183,103 @@ class TestApp(unittest.TestCase):
 
     def test_add_to_nonexistent_warehouse(self):
         response = self.client.post('/warehouse/999/add', data={
+            'product_name': 'Mangoes',
             'amount': '10'
         }, follow_redirects=True)
         self.assertIn(b'Warehouse not found', response.data)
 
     def test_remove_from_nonexistent_warehouse(self):
         response = self.client.post('/warehouse/999/remove', data={
+            'product_name': 'Peaches',
             'amount': '10'
         }, follow_redirects=True)
         self.assertIn(b'Warehouse not found', response.data)
+
+    def test_add_multiple_products(self):
+        self.client.post('/warehouse/create', data={
+            'name': 'Test Warehouse',
+            'tilavuus': '100',
+            'alku_saldo': '0'
+        })
+        self.client.post('/warehouse/1/add', data={
+            'product_name': 'Apples',
+            'amount': '20'
+        })
+        self.client.post('/warehouse/1/add', data={
+            'product_name': 'Oranges',
+            'amount': '30'
+        })
+        warehouse = store.get(1)
+        self.assertEqual(len(warehouse['products']), 2)
+        self.assertEqual(warehouse['products']['Apples'], 20)
+        self.assertEqual(warehouse['products']['Oranges'], 30)
+
+    def test_add_same_product_twice(self):
+        self.client.post('/warehouse/create', data={
+            'name': 'Test Warehouse',
+            'tilavuus': '100',
+            'alku_saldo': '0'
+        })
+        self.client.post('/warehouse/1/add', data={
+            'product_name': 'Apples',
+            'amount': '20'
+        })
+        self.client.post('/warehouse/1/add', data={
+            'product_name': 'Apples',
+            'amount': '15'
+        })
+        warehouse = store.get(1)
+        self.assertEqual(warehouse['products']['Apples'], 35)
+
+    def test_remove_nonexistent_product(self):
+        self.client.post('/warehouse/create', data={
+            'name': 'Test Warehouse',
+            'tilavuus': '100',
+            'alku_saldo': '0'
+        })
+        response = self.client.post('/warehouse/1/remove', data={
+            'product_name': 'NonExistent',
+            'amount': '10'
+        }, follow_redirects=True)
+        self.assertIn(b'not found in warehouse', response.data)
+
+    def test_remove_all_of_product(self):
+        self.client.post('/warehouse/create', data={
+            'name': 'Test Warehouse',
+            'tilavuus': '100',
+            'alku_saldo': '0'
+        })
+        self.client.post('/warehouse/1/add', data={
+            'product_name': 'Apples',
+            'amount': '20'
+        })
+        self.client.post('/warehouse/1/remove', data={
+            'product_name': 'Apples',
+            'amount': '20'
+        })
+        warehouse = store.get(1)
+        self.assertNotIn('Apples', warehouse['products'])
+
+    def test_add_without_product_name(self):
+        self.client.post('/warehouse/create', data={
+            'name': 'Test Warehouse',
+            'tilavuus': '100',
+            'alku_saldo': '0'
+        })
+        response = self.client.post('/warehouse/1/add', data={
+            'product_name': '',
+            'amount': '10'
+        }, follow_redirects=True)
+        self.assertIn(b'Product name is required', response.data)
+
+    def test_remove_without_product_name(self):
+        self.client.post('/warehouse/create', data={
+            'name': 'Test Warehouse',
+            'tilavuus': '100',
+            'alku_saldo': '0'
+        })
+        response = self.client.post('/warehouse/1/remove', data={
+            'product_name': '',
+            'amount': '10'
+        }, follow_redirects=True)
+        self.assertIn(b'Product name is required', response.data)

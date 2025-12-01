@@ -17,9 +17,10 @@
                     <div class="warehouse-info">
                         <h3>{{ warehouse.name }}</h3>
                         <p>
-                            Balance: {{ warehouse.varasto.saldo }} | 
+                            Products: {{ warehouse.products|length }} types | 
+                            Used: {{ warehouse.products.values()|sum if warehouse.products else 0 }} |
                             Capacity: {{ warehouse.varasto.tilavuus }} |
-                            Space left: {{ warehouse.varasto.paljonko_mahtuu() }}
+                            Space left: {{ warehouse.varasto.tilavuus - (warehouse.products.values()|sum if warehouse.products else 0) }}
                         </p>
                     </div>
                     <a href="{{ url_for('view_warehouse', warehouse_id=id) }}" 
