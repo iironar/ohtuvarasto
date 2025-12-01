@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ warehouse.name }} - Warehouse App{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Edit Warehouse</h1>
+    
+    <form method="POST">
+        <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" required 
+                   value="{{ warehouse.name }}"
+                   placeholder="Enter warehouse name">
+        </div>
+        
+        <div class="form-group">
+            <label for="tilavuus">Capacity</label>
+            <input type="number" id="tilavuus" name="tilavuus" 
+                   step="0.01" min="0.01" required
+                   value="{{ warehouse.varasto.tilavuus }}"
+                   placeholder="Enter maximum capacity">
+        </div>
+        
+        <p style="color: #666; margin-bottom: 20px;">
+            <em>
+                Note: Current balance ({{ warehouse.varasto.saldo }}) 
+                will be preserved.
+            </em>
+        </p>
+        
+        <button type="submit" class="btn btn-success">Save Changes</button>
+        <a href="{{ url_for('view_warehouse', warehouse_id=warehouse.id) }}" 
+           class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}
