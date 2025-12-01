@@ -1,9 +1,10 @@
+import os
 from flask import Flask, render_template, request, redirect, url_for, flash
 from varasto import Varasto
 
 
 app = Flask(__name__)
-app.secret_key = 'development-key'
+app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
 
 
 class WarehouseStore:
@@ -174,4 +175,4 @@ def remove_from_warehouse(warehouse_id):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=os.environ.get('FLASK_DEBUG', 'false').lower() == 'true')
