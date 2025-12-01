@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Create Warehouse - Warehouse App{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Create New Warehouse</h1>
+    
+    <form method="POST">
+        <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" required 
+                   placeholder="Enter warehouse name">
+        </div>
+        
+        <div class="form-group">
+            <label for="tilavuus">Capacity</label>
+            <input type="number" id="tilavuus" name="tilavuus" 
+                   step="0.01" min="0.01" required
+                   placeholder="Enter maximum capacity">
+        </div>
+        
+        <div class="form-group">
+            <label for="alku_saldo">Initial Balance (optional)</label>
+            <input type="number" id="alku_saldo" name="alku_saldo" 
+                   step="0.01" min="0" value="0"
+                   placeholder="Enter initial balance">
+        </div>
+        
+        <button type="submit" class="btn btn-success">Create Warehouse</button>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}
