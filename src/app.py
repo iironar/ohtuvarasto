@@ -113,7 +113,8 @@ def handle_edit_warehouse(warehouse, warehouse_id):
         return render_template('edit_warehouse.html', warehouse=warehouse)
 
     warehouse['name'] = name
-    warehouse['varasto'] = Varasto(tilavuus, warehouse['varasto'].saldo)
+    current_used = sum(warehouse['products'].values())
+    warehouse['varasto'] = Varasto(tilavuus, current_used)
     flash(f'Warehouse "{name}" updated successfully', 'success')
     return redirect(url_for('view_warehouse', warehouse_id=warehouse_id))
 
@@ -168,15 +169,20 @@ def add_to_warehouse(warehouse_id):
     return handle_add_product(warehouse, product_name, amount, warehouse_id)
 
 
+def get_space_available(warehouse):
+    current = sum(warehouse['products'].values())
+    return warehouse['varasto'].tilavuus - current
+
+
 def handle_add_product(warehouse, product_name, amount, warehouse_id):
     products = warehouse['products']
-    current_total = sum(products.values())
-    space = warehouse['varasto'].tilavuus - current_total
-    amount = min(amount, space)
+    space = get_space_available(warehouse)
+    original_amount, amount = amount, min(amount, space)
 
     if amount > 0:
         products[product_name] = products.get(product_name, 0) + amount
-        flash(f'Added {amount} of "{product_name}" to warehouse', 'success')
+        limited = ' (limited by space)' if amount < original_amount else ''
+        flash(f'Added {amount} of "{product_name}"{limited}', 'success')
     else:
         flash('No space available in warehouse', 'error')
 
